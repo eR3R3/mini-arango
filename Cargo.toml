@@ -1,0 +1,73 @@
+[package]
+name = "mini-arango"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# Core dependencies
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.0", features = ["v4", "serde"] }
+thiserror = "1.0"
+anyhow = "1.0"
+async-trait = "0.1"
+
+# Logging and tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+log = "0.4"
+
+# HTTP and networking
+axum = { version = "0.7", features = ["json", "query", "tower-log"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+hyper = { version = "1.0", features = ["full"] }
+
+# Database and storage
+rocksdb = { version = "0.22", features = ["multi-threaded-cf"] }
+dashmap = "5.5"
+lru = "0.12"
+
+# Time and date handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# Hashing and crypto
+sha2 = "0.10"
+md5 = "0.7"
+fnv = "1.0"
+hex = "0.4"
+
+# Graph algorithms
+petgraph = "0.6"
+
+# Configuration
+config = "0.14"
+toml = "0.8"
+
+# Validation
+validator = { version = "0.18", features = ["derive"] }
+
+# Threading and synchronization
+parking_lot = "0.12"
+rayon = "1.8"
+crossbeam-channel = "0.5"
+num_cpus = "1.16"
+
+# Memory management
+bytes = "1.5"
+
+# Document processing
+regex = "1.10"
+
+# Path and URL handling
+url = "2.5"
+
+# Statistics and metrics
+prometheus = { version = "0.13", features = ["process"] }
+
+# CLI
+clap = { version = "4.4", features = ["derive"] }
+
+# Random number generation
+rand = "0.8"

@@ -71,3 +71,4 @@ clap = { version = "4.4", features = ["derive"] }
 
 # Random number generation
 rand = "0.8"
+tempfile = "3.20.0"

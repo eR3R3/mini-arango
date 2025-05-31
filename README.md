@@ -1,6 +1,6 @@
 # Mini-ArangoDB 
 
-## !!! Note that
+##  !!! Note that
 this is originally from another project I made 5 months ago, so it may take a while for me to maintain this since I do copy the code bit by bit from the other repo which is not inspired by arango and make some changes, but I do implement most features from arango
 db with only rocksdb as the storage engine, not cluster version
 

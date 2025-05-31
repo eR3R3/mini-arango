@@ -213,6 +213,7 @@ impl Path {
     /// Add an edge to the path
     pub fn add_edge(&mut self, edge: Edge) {
         self.weight += edge.weight();
+        /// push the edges 
         self.edges.push(edge);
     }
 

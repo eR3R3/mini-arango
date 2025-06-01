@@ -5,6 +5,129 @@ this is originally from another project I made 5 months ago, so it may take a wh
 db with only rocksdb as the storage engine, not cluster version
 
 
+# Demo
+![img.png](img.png)
+![img_1.png](img_1.png)
+![img_2.png](img_2.png)
+
+
+# 🔗 Mini ArangoDB Shell - Simple Graph Operation Guide
+
+## Quick Start
+
+### 1. Start the Shell
+```bash
+./target/release/arangod --data-dir ./graph-demo shell
+# Create a full social network demo
+arangodb> graph demo
+
+# View created collections
+arangodb> collections
+
+# View users
+arangodb> get users alice
+arangodb> get users bob
+
+# Create vertex collection (stores nodes)
+arangodb> create collection people
+
+# Create edge collection (stores relationships)
+arangodb> create collection relationships edge
+
+# View collections
+arangodb> collections
+
+# Add person nodes
+arangodb> insert people {"name": "Zhang San", "age": 25, "city": "Beijing"}
+arangodb> insert people {"name": "Li Si", "age": 30, "city": "Shanghai"}
+arangodb> insert people {"name": "Wang Wu", "age": 28, "city": "Shenzhen"}
+
+# View nodes
+arangodb> get people Zhang San
+arangodb> count people
+
+# Use the graph edge command to add relationships
+arangodb> graph edge relationships people/Zhang San people/Li Si {"relation": "friend", "since": "2020"}
+arangodb> graph edge relationships people/Li Si people/Wang Wu {"relation": "colleague", "since": "2021"}
+arangodb> graph edge relationships people/Zhang San people/Wang Wu {"relation": "classmate", "since": "2019"}
+
+# View edge count
+arangodb> count relationships
+
+# Traverse from Zhang San with depth 2
+arangodb> traverse people/Zhang San 2
+
+# Traverse from Li Si
+arangodb> traverse people/Li Si 1
+
+# Practical Examples
+# E-commerce Recommendation System
+# 1. Create graph structure
+arangodb> create collection users
+arangodb> create collection products  
+arangodb> create collection purchases edge
+
+# 2. Add users
+arangodb> insert users {"name": "Xiao Ming", "age": 25, "interests": ["Phones", "Games"]}
+arangodb> insert users {"name": "Xiao Hong", "age": 22, "interests": ["Beauty", "Fashion"]}
+
+# 3. Add products
+arangodb> insert products {"name": "iPhone15", "category": "Phone", "price": 6999}
+arangodb> insert products {"name": "MacBook", "category": "Laptop", "price": 12999}
+
+# 4. Add purchase relationships
+arangodb> graph edge purchases users/Xiao Ming products/iPhone15 {"action": "purchase", "rating": 5}
+arangodb> graph edge purchases users/Xiao Hong products/MacBook {"action": "wishlist", "rating": 4}
+
+# 5. View user purchase behavior
+arangodb> traverse users/Xiao Ming 2
+
+# 1. Create concepts and relations
+arangodb> create collection concepts
+arangodb> create collection relations edge
+
+# Knowledge Graph
+# 2. Add programming concepts
+arangodb> insert concepts {"name": "Python", "type": "Programming Language", "level": "Beginner"}
+arangodb> insert concepts {"name": "Machine Learning", "type": "Technical Field", "level": "Advanced"}
+arangodb> insert concepts {"name": "Data Analysis", "type": "Application Area", "level": "Intermediate"}
+
+# 3. Establish concept relationships
+arangodb> graph edge relations concepts/Python concepts/Machine Learning {"relation": "used for"}
+arangodb> graph edge relations concepts/Python concepts/Data Analysis {"relation": "suitable for"}
+
+# 4. Explore knowledge relations
+arangodb> traverse concepts/Python 2
+
+
+# Query
+# View all collections
+arangodb> collections
+
+# View statistics
+arangodb> stats
+
+# View specific collection info
+arangodb> info users
+arangodb> info relationships
+
+# View specific node
+arangodb> get people Zhang San
+
+# Count all nodes
+arangodb> count people
+
+# Count all relationships
+arangodb> count relationships
+```
+
+
+
+
+
+
+
+
 This document outlines the comprehensive enhancements made to bridge the gap between mini-arangodb and the complete ArangoDB implementation.
 
 ## Enhanced Index System

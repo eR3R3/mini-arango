@@ -1,2 +1,3 @@
-mod database;
-mod collections;
+pub mod database;
+pub mod collections;
+

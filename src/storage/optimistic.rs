@@ -102,7 +102,7 @@ impl OptimisticRocksDBEngine {
         let config = EngineConfig::default();
 
         // Ensure data directory exists
-        crate::common::utils::ensure_directory(&data_path)?;
+        crate::common::util::ensure_directory(&data_path)?;
 
         let db = Self::open_optimistic_database(&data_path, &config)?;
 

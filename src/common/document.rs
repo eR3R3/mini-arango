@@ -8,7 +8,7 @@ use uuid::Uuid;
 use crate::common::error::{ArangoError, Result};
 
 /// Document key type - must be a valid string identifier
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct DocumentKey(String);
 
 impl DocumentKey {
@@ -18,27 +18,27 @@ impl DocumentKey {
         Self::validate_key(&key)?;
         Ok(DocumentKey(key))
     }
-
+    
     /// Generate a new random document key
     pub fn generate() -> Self {
         DocumentKey(Uuid::new_v4().to_string().replace('-', ""))
     }
-
+    
     /// Get the key as a string
     pub fn as_str(&self) -> &str {
         &self.0
     }
-
+    
     /// Validate document key format
     fn validate_key(key: &str) -> Result<()> {
         if key.is_empty() {
             return Err(ArangoError::bad_parameter("document key cannot be empty"));
         }
-
+        
         if key.len() > 254 {
             return Err(ArangoError::bad_parameter("document key too long (max 254 characters)"));
         }
-
+        
         // Check if key contains only valid characters
         for c in key.chars() {
             if !c.is_alphanumeric() && c != '_' && c != '-' && c != '.' && c != ':' {
@@ -47,19 +47,19 @@ impl DocumentKey {
                 ));
             }
         }
-
+        
         // Keys cannot start with underscore (reserved for system documents)
         if key.starts_with('_') {
             return Err(ArangoError::bad_parameter("document key cannot start with underscore"));
         }
-
+        
         Ok(())
     }
 }
 
 impl FromStr for DocumentKey {
     type Err = ArangoError;
-
+    
     fn from_str(s: &str) -> Result<Self> {
         DocumentKey::new(s)
     }
@@ -78,10 +78,10 @@ impl From<DocumentKey> for String {
 }
 
 /// Document ID - combination of collection name and document key
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct DocumentId {
-    collection: String,
-    key: DocumentKey,
+    pub collection: String,
+    pub key: DocumentKey,
 }
 
 impl DocumentId {
@@ -92,7 +92,7 @@ impl DocumentId {
             key,
         }
     }
-
+    
     /// Parse document ID from string format "collection/key"
     pub fn parse(id: &str) -> Result<Self> {
         let parts: Vec<&str> = id.split('/').collect();
@@ -101,23 +101,23 @@ impl DocumentId {
                 "document ID must be in format 'collection/key'"
             ));
         }
-
+        
         let collection = parts[0].to_string();
         let key = DocumentKey::new(parts[1])?;
-
+        
         Ok(DocumentId { collection, key })
     }
-
+    
     /// Get collection name
     pub fn collection(&self) -> &str {
         &self.collection
     }
-
+    
     /// Get document key
     pub fn key(&self) -> &DocumentKey {
         &self.key
     }
-
+    
     /// Convert to string format "collection/key"
     pub fn to_string(&self) -> String {
         format!("{}/{}", self.collection, self.key)
@@ -150,7 +150,7 @@ impl<'de> Deserialize<'de> for DocumentId {
 }
 
 /// Document revision - used for optimistic locking
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, PartialOrd, Ord)]
 pub struct DocumentRevision(String);
 
 impl DocumentRevision {
@@ -158,12 +158,12 @@ impl DocumentRevision {
     pub fn new() -> Self {
         DocumentRevision(format!("{}", chrono::Utc::now().timestamp_nanos()))
     }
-
+    
     /// Create revision from string
     pub fn from_string(rev: String) -> Self {
         DocumentRevision(rev)
     }
-
+    
     /// Get revision as string
     pub fn as_str(&self) -> &str {
         &self.0
@@ -183,27 +183,40 @@ impl fmt::Display for DocumentRevision {
 }
 
 /// Document metadata
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct DocumentMetadata {
     /// Document ID
     #[serde(rename = "_id")]
     pub id: DocumentId,
-
+    
     /// Document key
     #[serde(rename = "_key")]
     pub key: DocumentKey,
-
+    
     /// Document revision
     #[serde(rename = "_rev")]
     pub revision: DocumentRevision,
-
+    
     /// Creation timestamp
     #[serde(rename = "_created")]
     pub created: DateTime<Utc>,
-
+    
     /// Last modification timestamp
     #[serde(rename = "_modified")]
     pub modified: DateTime<Utc>,
+}
+
+impl PartialOrd for DocumentMetadata {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for DocumentMetadata {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.id.cmp(&other.id)
+            .then_with(|| self.revision.cmp(&other.revision))
+    }
 }
 
 impl DocumentMetadata {
@@ -211,7 +224,7 @@ impl DocumentMetadata {
     pub fn new(id: DocumentId) -> Self {
         let now = Utc::now();
         let key = id.key().clone();
-
+        
         DocumentMetadata {
             id,
             key,
@@ -220,7 +233,7 @@ impl DocumentMetadata {
             modified: now,
         }
     }
-
+    
     /// Update revision and modification time
     pub fn update_revision(&mut self) {
         self.revision = DocumentRevision::new();
@@ -229,15 +242,27 @@ impl DocumentMetadata {
 }
 
 /// Main document type
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Document {
     /// Document metadata (flattened into the document)
     #[serde(flatten)]
     pub metadata: DocumentMetadata,
-
+    
     /// Document data as a JSON object
     #[serde(flatten)]
     pub data: Map<String, Value>,
+}
+
+impl PartialOrd for Document {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Document {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.metadata.cmp(&other.metadata)
+    }
 }
 
 impl Document {
@@ -253,10 +278,10 @@ impl Document {
         } else {
             DocumentKey::generate()
         };
-
+        
         let id = DocumentId::new(collection, key);
         let metadata = DocumentMetadata::new(id);
-
+        
         // Remove system fields from data
         let mut clean_data = data;
         clean_data.remove("_key");
@@ -264,18 +289,18 @@ impl Document {
         clean_data.remove("_rev");
         clean_data.remove("_created");
         clean_data.remove("_modified");
-
+        
         Ok(Document {
             metadata,
             data: clean_data,
         })
     }
-
+    
     /// Create document with specific key
     pub fn with_key(collection: impl Into<String>, key: DocumentKey, data: Map<String, Value>) -> Self {
         let id = DocumentId::new(collection, key);
         let metadata = DocumentMetadata::new(id);
-
+        
         // Remove system fields from data
         let mut clean_data = data;
         clean_data.remove("_key");
@@ -283,44 +308,44 @@ impl Document {
         clean_data.remove("_rev");
         clean_data.remove("_created");
         clean_data.remove("_modified");
-
+        
         Document {
             metadata,
             data: clean_data,
         }
     }
-
+    
     /// Get document ID
     pub fn id(&self) -> &DocumentId {
         &self.metadata.id
     }
-
+    
     /// Get document key
     pub fn key(&self) -> &DocumentKey {
         &self.metadata.key
     }
-
+    
     /// Get document revision
     pub fn revision(&self) -> &DocumentRevision {
         &self.metadata.revision
     }
-
+    
     /// Get collection name
     pub fn collection(&self) -> &str {
         self.metadata.id.collection()
     }
-
+    
     /// Get a field value
     pub fn get(&self, field: &str) -> Option<&Value> {
         self.data.get(field)
     }
-
+    
     /// Set a field value
     pub fn set(&mut self, field: String, value: Value) {
         self.data.insert(field, value);
         self.metadata.update_revision();
     }
-
+    
     /// Remove a field
     pub fn remove(&mut self, field: &str) -> Option<Value> {
         let result = self.data.remove(field);
@@ -329,17 +354,17 @@ impl Document {
         }
         result
     }
-
+    
     /// Get all field names
     pub fn fields(&self) -> Vec<&String> {
         self.data.keys().collect()
     }
-
+    
     /// Convert to JSON value (including metadata)
     pub fn to_json(&self) -> Value {
         serde_json::to_value(self).unwrap_or(Value::Null)
     }
-
+    
     /// Create from JSON value
     pub fn from_json(collection: impl Into<String>, value: Value) -> Result<Self> {
         if let Value::Object(map) = value {
@@ -348,7 +373,7 @@ impl Document {
             Err(ArangoError::bad_parameter("document must be a JSON object"))
         }
     }
-
+    
     /// Update document data while preserving metadata
     pub fn update(&mut self, data: Map<String, Value>) {
         // Remove system fields from new data
@@ -358,11 +383,11 @@ impl Document {
         clean_data.remove("_rev");
         clean_data.remove("_created");
         clean_data.remove("_modified");
-
+        
         self.data = clean_data;
         self.metadata.update_revision();
     }
-
+    
     /// Merge new data into existing document
     pub fn merge(&mut self, data: Map<String, Value>) {
         for (key, value) in data {
@@ -373,17 +398,17 @@ impl Document {
         }
         self.metadata.update_revision();
     }
-
+    
     /// Get document as a map without metadata
     pub fn data_only(&self) -> Map<String, Value> {
         self.data.clone()
     }
-
+    
     /// Get document size in bytes (approximate)
     pub fn size(&self) -> usize {
         serde_json::to_string(self).map(|s| s.len()).unwrap_or(0)
     }
-
+    
     /// Check if document is empty (no user data)
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
@@ -391,19 +416,33 @@ impl Document {
 }
 
 /// Edge document - extends regular document with edge-specific fields
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct EdgeDocument {
     /// Base document
     #[serde(flatten)]
     pub document: Document,
-
+    
     /// Source vertex ID
     #[serde(rename = "_from")]
     pub from: DocumentId,
-
+    
     /// Target vertex ID
     #[serde(rename = "_to")]
     pub to: DocumentId,
+}
+
+impl PartialOrd for EdgeDocument {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for EdgeDocument {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.document.cmp(&other.document)
+            .then_with(|| self.from.cmp(&other.from))
+            .then_with(|| self.to.cmp(&other.to))
+    }
 }
 
 impl EdgeDocument {
@@ -415,38 +454,38 @@ impl EdgeDocument {
         data: Map<String, Value>,
     ) -> Result<Self> {
         let mut document = Document::new(collection, data)?;
-
+        
         // Remove edge fields from document data if present
         document.data.remove("_from");
         document.data.remove("_to");
-
+        
         Ok(EdgeDocument {
             document,
             from,
             to,
         })
     }
-
+    
     /// Get source vertex ID
     pub fn from(&self) -> &DocumentId {
         &self.from
     }
-
+    
     /// Get target vertex ID
     pub fn to(&self) -> &DocumentId {
         &self.to
     }
-
+    
     /// Get the underlying document
     pub fn document(&self) -> &Document {
         &self.document
     }
-
+    
     /// Get mutable reference to underlying document
     pub fn document_mut(&mut self) -> &mut Document {
         &mut self.document
     }
-
+    
     /// Convert to JSON value (including edge metadata)
     pub fn to_json(&self) -> Value {
         serde_json::to_value(self).unwrap_or(Value::Null)
@@ -471,7 +510,7 @@ impl DocumentOperationResult {
             old_revision: None,
         }
     }
-
+    
     pub fn with_old_revision(mut self, old_rev: DocumentRevision) -> Self {
         self.old_revision = Some(old_rev);
         self
@@ -537,7 +576,7 @@ mod tests {
         let mut data = Map::new();
         data.insert("name".to_string(), json!("test"));
         data.insert("value".to_string(), json!(42));
-
+        
         let doc = Document::new("test_collection", data).unwrap();
         assert_eq!(doc.collection(), "test_collection");
         assert_eq!(doc.get("name"), Some(&json!("test")));
@@ -556,10 +595,10 @@ mod tests {
     fn test_edge_document() {
         let from = DocumentId::parse("vertices/v1").unwrap();
         let to = DocumentId::parse("vertices/v2").unwrap();
-
+        
         let mut data = Map::new();
         data.insert("weight".to_string(), json!(1.0));
-
+        
         let edge = EdgeDocument::new("edges", from.clone(), to.clone(), data).unwrap();
         assert_eq!(edge.from(), &from);
         assert_eq!(edge.to(), &to);

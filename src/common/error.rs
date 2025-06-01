@@ -40,7 +40,7 @@ pub enum ErrorCode {
     GotSignal = 35,
     ProcessingError = 37,
     SerializationError = 40,
-
+    
     // HTTP errors
     HttpBadParameter = 400,
     HttpUnauthorized = 401,
@@ -55,7 +55,7 @@ pub enum ErrorCode {
     HttpNotImplemented = 501,
     HttpBadGateway = 502,
     HttpServiceUnavailable = 503,
-
+    
     // ArangoDB errors
     ArangoInvalidDatabase = 1200,
     ArangoUseSystemDatabase = 1201,
@@ -97,7 +97,7 @@ pub enum ErrorCode {
     ArangoDocumentRevBad = 1247,
     ArangoDocumentKeyMissing = 1248,
     ArangoIncompleteRead = 1249,
-
+    
     // Transaction errors
     TransactionUnregisteredCollection = 1900,
     TransactionDisallowedOperation = 1901,
@@ -106,7 +106,7 @@ pub enum ErrorCode {
     TransactionInternal = 1904,
     TransactionNested = 1905,
     TransactionConflict = 1906,
-
+    
     // Query errors
     QueryKilled = 1500,
     QueryInvalidSyntax = 1501,
@@ -142,7 +142,7 @@ pub enum ErrorCode {
     QueryBadJsonPlan = 1578,
     QueryNotFound = 1579,
     QueryInternalError = 1580,
-
+    
     // Graph errors
     GraphInvalidGraph = 1920,
     GraphCouldNotCreateGraph = 1921,
@@ -182,7 +182,7 @@ impl ErrorCode {
     pub fn as_u32(&self) -> u32 {
         *self as u32
     }
-
+    
     pub fn from_u32(value: u32) -> Self {
         // This is safe because we're using repr(u32) and handling unknown values
         match value {
@@ -246,46 +246,46 @@ pub enum ArangoError {
         code: ErrorCode,
         message: String,
     },
-
+    
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
-
+    
     #[error("RocksDB error: {0}")]
     RocksDb(#[from] rocksdb::Error),
-
+    
     #[error("Serialization error: {0}")]
     Serde(#[from] serde_json::Error),
-
+    
     #[error("UTF-8 error: {0}")]
     Utf8(#[from] std::str::Utf8Error),
-
+    
     #[error("UUID error: {0}")]
     Uuid(#[from] uuid::Error),
-
+    
     #[error("HTTP error: {0}")]
     Http(String),
-
+    
     #[error("Validation error: {0}")]
     Validation(String),
-
+    
     #[error("Parse error: {0}")]
     Parse(String),
-
+    
     #[error("Configuration error: {0}")]
     Config(String),
-
+    
     #[error("Network error: {0}")]
     Network(String),
-
+    
     #[error("Transaction error: {0}")]
     Transaction(String),
-
+    
     #[error("Query error: {0}")]
     Query(String),
-
+    
     #[error("Graph error: {0}")]
     Graph(String),
-
+    
     #[error("Index error: {0}")]
     Index(String),
 }
@@ -297,64 +297,64 @@ impl ArangoError {
             message: message.into(),
         }
     }
-
+    
     pub fn internal(message: impl Into<String>) -> Self {
         ArangoError::new(ErrorCode::Internal, message)
     }
-
+    
     pub fn bad_parameter(message: impl Into<String>) -> Self {
         ArangoError::new(ErrorCode::BadParameter, message)
     }
-
+    
     pub fn not_found(message: impl Into<String>) -> Self {
         ArangoError::new(ErrorCode::ArangoDocumentNotFound, message)
     }
-
+    
     pub fn forbidden(message: impl Into<String>) -> Self {
         ArangoError::new(ErrorCode::Forbidden, message)
     }
-
+    
     pub fn conflict(message: impl Into<String>) -> Self {
         ArangoError::new(ErrorCode::ArangoConflict, message)
     }
-
+    
     pub fn unique_constraint_violated(message: impl Into<String>) -> Self {
         ArangoError::new(ErrorCode::ArangoUniqueConstraintViolated, message)
     }
-
+    
     pub fn collection_not_found(collection_name: impl Into<String>) -> Self {
         ArangoError::new(
             ErrorCode::ArangoDataSourceNotFound,
             format!("collection '{}' not found", collection_name.into())
         )
     }
-
+    
     pub fn document_not_found(key: impl Into<String>) -> Self {
         ArangoError::new(
             ErrorCode::ArangoDocumentNotFound,
             format!("document '{}' not found", key.into())
         )
     }
-
+    
     pub fn graph_not_found(graph_name: impl Into<String>) -> Self {
         ArangoError::new(
             ErrorCode::GraphNotFound,
             format!("graph '{}' not found", graph_name.into())
         )
     }
-
+    
     pub fn transaction_conflict(message: impl Into<String>) -> Self {
         ArangoError::new(ErrorCode::TransactionConflict, message)
     }
-
+    
     pub fn invalid_index_definition(message: impl Into<String>) -> Self {
         ArangoError::new(ErrorCode::ArangoIndexTypeInvalid, message)
     }
-
+    
     pub fn invalid_index_data(message: impl Into<String>) -> Self {
         ArangoError::new(ErrorCode::ArangoCorrupted, message)
     }
-
+    
     pub fn error_code(&self) -> ErrorCode {
         match self {
             ArangoError::Database { code, .. } => *code,
@@ -374,7 +374,7 @@ impl ArangoError {
             ArangoError::Index(_) => ErrorCode::ArangoIndexNotFound,
         }
     }
-
+    
     pub fn is_not_found(&self) -> bool {
         matches!(self.error_code(), 
             ErrorCode::ArangoDocumentNotFound | 
@@ -383,7 +383,7 @@ impl ArangoError {
             ErrorCode::GraphNotFound
         )
     }
-
+    
     pub fn is_conflict(&self) -> bool {
         matches!(self.error_code(), 
             ErrorCode::ArangoConflict | 

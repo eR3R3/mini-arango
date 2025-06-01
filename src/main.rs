@@ -4,11 +4,11 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::time::Instant;
 use clap::{Parser, Subcommand, Args};
 use serde_json::{json, Value, Map};
-use mini_arangodb::{
+use mini_arango::{
     ArangoError, Result, Document, DocumentKey, DocumentId, DocumentFilter,
     OptimisticRocksDBEngine, StorageEngine
 };
-use mini_arangodb::arangod::storage_engine::optimistic_rocksdb_engine::CollectionType;
+use mini_arango::arangod::storage_engine::optimistic_rocksdb_engine::CollectionType;
 
 /// Mini ArangoDB - A Rust implementation of ArangoDB with RocksDB backend
 #[derive(Parser)]
@@ -33,7 +33,7 @@ enum Commands {
     Shell,
     /// Collection management commands
     Collection(CollectionCommand),
-    /// Document management commands  
+    /// Document management commands
     Document(DocumentCommand),
     /// Database management commands
     Database(DatabaseCommand),
@@ -1122,10 +1122,10 @@ async fn handle_graph_command(ctx: DatabaseContext, cmd: GraphCommand) -> Result
                     "interests": ["music", "programming"]
                 }),
                 json!({
-                    "_key": "bob", 
+                    "_key": "bob",
                     "name": "Bob Wang",
                     "age": 32,
-                    "city": "Shanghai", 
+                    "city": "Shanghai",
                     "interests": ["sports", "travel"]
                 }),
                 json!({

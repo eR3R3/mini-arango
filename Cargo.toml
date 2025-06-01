@@ -25,7 +25,7 @@ tower-http = { version = "0.5", features = ["cors", "trace"] }
 hyper = { version = "1.0", features = ["full"] }
 
 # Database and storage
-rocksdb = { version = "0.22", features = ["multi-threaded-cf"] }
+rocksdb = "0.22"
 dashmap = "5.5"
 lru = "0.12"
 
@@ -61,7 +61,7 @@ bytes = "1.5"
 regex = "1.10"
 
 # Path and URL handling
-url = "2.5"
+url = "2.4"
 
 # Statistics and metrics
 prometheus = { version = "0.13", features = ["process"] }
@@ -71,5 +71,8 @@ clap = { version = "4.4", features = ["derive"] }
 
 # Random number generation
 rand = "0.8"
+urlencoding = "2.1.3"
+
+# Added from the code block
+ordered-float = { version = "4.2", features = ["serde"] }
 tempfile = "3.20.0"
-ordered-float = "5.0.0"

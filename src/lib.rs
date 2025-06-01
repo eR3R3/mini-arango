@@ -40,7 +40,7 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const NAME: &str = env!("CARGO_PKG_NAME");
 
 /// Mini ArangoDB library initialization
-pub fn init() -> Result<()> {
+pub unsafe fn init() -> Result<()> {
     // Initialize logging if not already done
     if std::env::var("RUST_LOG").is_err() {
         std::env::set_var("RUST_LOG", "info");

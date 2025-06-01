@@ -16,7 +16,7 @@ this can be wrong to some extent since I have only test on my computer; and the 
 created since I am solving their problem with the RocksDB Opimistic transaction struct.
 ### (macOS, Release Build)
 
-### 📊 Real-World Test Data (macOS, Release Build)
+### Real-World Test Data (macOS, Release Build)
 
 | Operation Type | Test Scale             | Time Taken | Throughput          | 
 |----------------|------------------------|------------|----------------------|
@@ -24,7 +24,7 @@ created since I am solving their problem with the RocksDB Opimistic transaction 
 | Document Read   | 500 reads              | 0.031s     | ~16,000 reads/sec    | 
 | Graph Creation  | 500 vertices + 1,000 edges | 0.037s | ~40,000 ops/sec     | 
 | Graph Traversal | Multiple traversals    | 0.029s     | High-speed traversal | 
-#### 📋 Document Database Performance Comparison
+#### Document Database Performance Comparison
 
 | Database         | Insert Performance   | Read Performance    | Relative Performance |
 |------------------|----------------------|----------------------|-----------------------|
@@ -33,7 +33,7 @@ created since I am solving their problem with the RocksDB Opimistic transaction 
 | MongoDB          | ~14K docs/sec        | ~15K reads/sec       | 90%                   |
 | CouchDB          | ~12K docs/sec        | ~14K reads/sec       | 80%                   |
 
-#### 🔗 Graph Database Performance Comparison
+#### Graph Database Performance Comparison
 
 | Database         | Graph Creation       | Traversal Performance | Relative Performance |
 |------------------|----------------------|------------------------|-----------------------|
